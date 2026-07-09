@@ -1,2 +1,3 @@
+color 2
 cargo build --release
-@pause
+timeout 7

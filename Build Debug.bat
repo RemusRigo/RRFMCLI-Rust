@@ -1,2 +1,3 @@
+color 2
 cargo build --debug
-@pause
+timeout 7
