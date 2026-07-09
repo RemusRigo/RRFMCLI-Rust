@@ -14,7 +14,8 @@ A Windows file utility command line interface
 ## Usage
 
 * Update file (take source file and overwrite all files with the same name in the given path):
- * RRFMCLI /source:sorcefile /search:path
+
+  * RRFMCLI /source:sorcefile /search:path
 
 
 
@@ -36,3 +37,4 @@ A Windows file utility command line interface
 
 * 2026-07-09: Add: Update file
 * 2026-07-09: Project started
+
