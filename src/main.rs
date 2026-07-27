@@ -1,116 +1,66 @@
 /* ------------------------------------------------------------------------------------------------
    RRFM CLI Tool
       © 2026 Remus Rigo
-         v1.0 20260709
+         v1.0 20260727
 ------------------------------------------------------------------------------------------------ */
 
 use std::env;
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::process::exit;
+use std::path::Path;
 
-enum Action {
-    UpdateFiles,
-    InsertBOL(String),
-    InsertEOL(String),
+struct Args {
+    flag_updatefile: bool,
+    source_file: Option<String>,
+    search_path: Option<String>,
 }
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
+// Parse command line arguments and return an Args struct
+fn parse_args(args: &[String]) -> Args {
+    let mut flag_updatefile = false;
+    let mut source_file = None;
+    let mut search_path = None;
 
-    let mut action: Option<Action> = None;
-    let mut source: Option<PathBuf> = None;
-    let mut search: Option<PathBuf> = None;
+    // /UF update file
+    if args.len() > 1 && args[1].to_uppercase() == "/UF" {
+        flag_updatefile = true;
 
-    // check parameters
-    for arg in args.iter().skip(1) {
-        if arg == "/UF" {
-            action = Some(Action::UpdateFiles);
-        }
-        if let Some(val) = arg.strip_prefix("/source:") {
-            source = Some(PathBuf::from(val));
-        }
-        if let Some(val) = arg.strip_prefix("/search:") {
-            search = Some(PathBuf::from(val));
+        // /source:<path/sourcefile>
+        if args.len() > 2 {
+            let param2 = &args[2];
+            if param2.to_lowercase().starts_with("/source:") {
+                if let Some((_, value)) = param2.split_once(':') {
+                    source_file = Some(value.trim_matches('"').to_string());
+                }
+            }
+       }
+
+        // /search:<path>
+        if args.len() > 3 {
+            let param3 = &args[3];
+            if param3.to_lowercase().starts_with("/search:") {
+                if let Some((_, value)) = param3.split_once(':') {
+                    search_path = Some(value.trim_matches('"').to_string());
+                }
+            }
         }
     }
 
-    // No action specified, print usage and exit
-    let action = action.unwrap_or_else(|| {
-        print_help();
-        exit(0);
-    });
-
-    match action {
-        Action::UpdateFiles => {
-            let source = source.unwrap_or_else(|| {
-                eprintln!("Missing /source:filename parameter");
-                exit(1);
-            });
-
-            let search = search.unwrap_or_else(|| {
-                eprintln!("Missing /search:path parameter");
-                exit(1);
-            });
-
-            if !source.is_file() {
-                eprintln!("Source file not found: {}", source.display());
-                exit(1);
-            }
-
-            if !search.is_dir() {
-                eprintln!("Search path not found: {}", search.display());
-                exit(1);
-            }
-
-            let target_name = source.file_name().unwrap_or_else(|| {
-                eprintln!("Could not determine filename from /source: value");
-                exit(1);
-            });
-
-            // Resolve the source's canonical path so we never overwrite it with itself
-            let source_full = fs::canonicalize(&source).unwrap_or_else(|_| source.clone());
-
-            let mut found = 0usize;
-            let mut replaced = 0usize;
-
-            update_files(&search, target_name, &source, &source_full, &mut found, &mut replaced);
-
-            println!();
-            println!("Found: {found}, Replaced: {replaced}");
-        }
-        Action::InsertBOL(text) => {
-            eprintln!("InsertBOL not implemented yet (text: {text})");
-            exit(1);
-        }
-        Action::InsertEOL(text) => {
-            eprintln!("InsertEOL not implemented yet (text: {text})");
-            exit(1);
-        }
-    }
+    Args { flag_updatefile, source_file, search_path }
 }
 
-fn print_help() {
-    println!("Usage:");
-    println!("  RRFMCLI /UF /source:<filename> /search:<path>");
-    println!();
-    println!("  /UF               Update files: overwrite matches with /source: file");
-    println!("  /source:<file>    File to copy from (searched filename is taken from this)");
-    println!("  /search:<path>    Folder to search recursively for matching filenames");
-}
-
+//-------------------------------------------------------------------------------------------------
+// Update files
 fn update_files(
-    dir: &Path,
-    target_name: &std::ffi::OsStr,
-    source: &Path,
-    source_full: &Path,
-    found: &mut usize,
-    replaced: &mut usize,
+    current_scanned_path: &Path,
+    search_filename: &std::ffi::OsStr,
+    source_path: &str,
+    source_path_absolute: &Path,
+    updated: &mut usize,
 ) {
-    let entries = match fs::read_dir(dir) {
+    let entries = match fs::read_dir(current_scanned_path) {
         Ok(e) => e,
         Err(err) => {
-            eprintln!("Cannot read {}: {}", dir.display(), err);
+            eprintln!("Cannot read {}: {}", current_scanned_path.display(), err);
             return;
         }
     };
@@ -119,23 +69,85 @@ fn update_files(
         let path = entry.path();
 
         if path.is_dir() {
-            update_files(&path, target_name, source, source_full, found, replaced);
-        } else if path.file_name() == Some(target_name) {
-            *found += 1;
+            update_files(&path, search_filename, source_path, source_path_absolute, updated);
+        } else if path.file_name() == Some(search_filename) {
+            let target_full_path = fs::canonicalize(&path).unwrap_or_else(|_| path.clone());
 
-            let path_full = fs::canonicalize(&path).unwrap_or_else(|_| path.clone());
-            if path_full == *source_full {
-                println!("Skipping source file itself: {}", path.display());
+            // skip if the found file IS the source file
+            if target_full_path == *source_path_absolute {
+                println!("Skipped (source itself): {}", target_full_path.display());
                 continue;
             }
 
-            match fs::copy(source, &path) {
+            match fs::copy(source_path, &path) {
                 Ok(_) => {
-                    println!("Replaced: {}", path.display());
-                    *replaced += 1;
+                    println!("Updated: {}", target_full_path.display());
+                    *updated += 1;
                 }
-                Err(err) => eprintln!("Failed to replace {}: {}", path.display(), err),
+                Err(err) => eprintln!("Failed to update {}: {}", path.display(), err),
             }
         }
+    }
+}
+//-------------------------------------------------------------------------------------------------
+// print information about the command line arguments
+fn print_info() {
+    println!("RRFMCLI v1.0 20260727");
+    println!("   © 2026 Remus Rigo");
+    println!();
+    println!("RRFMCLI /UF /source:<sourcefile> /search:<searchpath>");
+    println!("/UF - Update files");
+    println!("/source:<sourcefile> - Specify the path to the source file");
+    println!("/search:<searchpath> - Specify the search path");
+}
+
+//-------------------------------------------------------------------------------------------------
+// main function
+fn main() {
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() < 2 {
+        print_info();
+        std::process::exit(0);
+    }
+
+    let parsed = parse_args(&args);
+
+    if parsed.flag_updatefile {
+        let src_file_valid = match &parsed.source_file {
+            Some(f) => Path::new(f).is_file(),
+            None => false,
+       };
+
+        if !src_file_valid {
+            println!("Error: source file not found: {:?}", parsed.source_file);
+            println!();
+            print_info();
+            std::process::exit(1);
+        }
+    
+        let src_path_valid = match &parsed.search_path {
+            Some(p) => Path::new(p).is_dir(),
+            None => false,
+        };
+
+        if !src_path_valid {
+            println!("Error: search path not found: {:?}", parsed.search_path);
+            println!();
+            print_info();
+            std::process::exit(1);
+        }
+
+        let source_file = parsed.source_file.unwrap();
+        let search_path = parsed.search_path.unwrap();
+        let search_filename = Path::new(&source_file).file_name().unwrap();
+        let source_path_absolute = fs::canonicalize(&source_file).unwrap();
+        
+        let mut updated: usize = 0;
+
+        update_files(Path::new(&search_path), search_filename, &source_file, &source_path_absolute, &mut updated);
+
+        println!();
+        println!("Total files updated: {}", updated);
     }
 }
