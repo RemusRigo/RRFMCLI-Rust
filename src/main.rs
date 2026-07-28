@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------------------------------------------
    RRFM CLI Tool
       © 2026 Remus Rigo
-         v1.0 20260727
+         v1.0.20260728
 ------------------------------------------------------------------------------------------------ */
 
 use std::env;
@@ -71,17 +71,25 @@ fn update_files(
         if path.is_dir() {
             update_files(&path, search_filename, source_path, source_path_absolute, updated);
         } else if path.file_name() == Some(search_filename) {
-            let target_full_path = fs::canonicalize(&path).unwrap_or_else(|_| path.clone());
+            //let target_full_path = fs::canonicalize(&path).unwrap_or_else(|_| path.clone());
+            let path_full = fs::canonicalize(&path).unwrap_or_else(|_| path.clone());
 
             // skip if the found file IS the source file
+            /*
             if target_full_path == *source_path_absolute {
-                println!("Skipped (source itself): {}", target_full_path.display());
+                println!("Skip source: {}", target_full_path.display());
                 continue;
             }
+            */
+            if path_full == *source_path_absolute {
+                println!("Skip source: {}", path.display());
+                continue;
+            }   
 
             match fs::copy(source_path, &path) {
                 Ok(_) => {
-                    println!("Updated: {}", target_full_path.display());
+                    //println!("Updated: {}", target_full_path.display());
+                    println!("Updated: {}", path.display());
                     *updated += 1;
                 }
                 Err(err) => eprintln!("Failed to update {}: {}", path.display(), err),
@@ -92,12 +100,12 @@ fn update_files(
 //-------------------------------------------------------------------------------------------------
 // print information about the command line arguments
 fn print_info() {
-    println!("RRFMCLI v1.0 20260727");
+    println!("RRFMCLI v1.0.20260728");
     println!("   © 2026 Remus Rigo");
     println!();
     println!("RRFMCLI /UF /source:<sourcefile> /search:<searchpath>");
-    println!("/UF - Update files");
-    println!("/source:<sourcefile> - Specify the path to the source file");
+    println!("/UF - Update Files");
+    println!("/source:<sourcefile> - Specify the source file (path included)");
     println!("/search:<searchpath> - Specify the search path");
 }
 
