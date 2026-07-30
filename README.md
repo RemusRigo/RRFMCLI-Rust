@@ -13,28 +13,25 @@ A Windows file utility command line interface
 
 ## Usage
 
-* Update file (take source file and overwrite all files with the same name in the given path):
+* RRFMCLI /UF /source:sorcefile /search:path
 
-  * RRFMCLI /source:sorcefile /search:path
+  * /UF Update file (take source file and overwrite all files with the same name in the given path):
 
-
-
-## Features
-
-* 
+    * /source:sorcefile
+    * /search:path
 
 
 
 ## Statistics
 
-![status](https://img.shields.io/badge/status-in%20progress-orange)
+!\[status](https://img.shields.io/badge/status-in%20progress-orange)
 <br>
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/RemusRigo/RRFMCLI-Rust/total)
+!\[GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/RemusRigo/RRFMCLI-Rust/total)
+
 
 
 
 ## Roadmap
 
-* 2026-07-09: Add: Update file
+* 2026-07-09: Add: /UF Update file
 * 2026-07-09: Project started
-
