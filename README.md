@@ -24,9 +24,9 @@ A Windows file utility command line interface
 
 ## Statistics
 
-!\[status](https://img.shields.io/badge/status-in%20progress-orange)
+![status](https://img.shields.io/badge/status-in%20progress-orange)
 <br>
-!\[GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/RemusRigo/RRFMCLI-Rust/total)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/RemusRigo/RRFMCLI-Rust/total)
 
 
 
