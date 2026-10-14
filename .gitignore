@@ -1,31 +1,26 @@
 #------------------------------------------------
 # © 2026 Remus Rigo
-#    2026-07-09
+#    v1.1.20261001
 #------------------------------------------------
 
-# My ignored files ------------------------------
+# My ignored files
 ~Backup~
 ~ToDo~
 [Ss]ync.*
-*.psd
-
-# common ----------------------------------------
+[Uu]pload.*
 *.bak
 *.log
+*.psd
 *.tmp
 
-#------------------------------------------------
-# Common compiler ignored files
+# compiler binaries
 [Bb]in
 [Oo]bj
 
-# Windows ---------------------------------------
-[Dd]esktop.ini
-[Tt]humbs.db
+# Claude Code
+.claude
 
-# Delphi ----------------------------------------
-[Bb]in
-[Oo]bj
+# Delphi
 __history
 __recovery
 *.dproj.local
@@ -35,19 +30,21 @@ __recovery
 *.identcache
 *.tvsconfig
 
-# Lazarus ---------------------------------------
+# Lazarus
 *.lps
 
-# Python ---------------------------------------
+# Python
 .mypy_cache
-build
-dist
+[Bb]uild
+[Dd]ist
 *.spec
 
-# Rust ------------------------------------------
-target/
+# Rust
+[Tt]arget
 
-# Visual Studio ---------------------------------
-.vs/
-[Bb]in
-[Oo]bj
+# Visual Studio
+.vs
+
+# Windows
+[Dd]esktop.ini
+[Tt]humbs.db
